@@ -1,30 +1,66 @@
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.DeliverCallback;
+import com.rabbitmq.client.*;
+
 import io.github.cdimascio.dotenv.Dotenv;
+import java.util.Arrays;
 
 public class StockMarket {
-    private final static String QUEUE_NAME = "BROKER";
+    private final static String EXCHANGE_NAME = "trading_exchange";
 
     public static void main(String[] argv) throws Exception {
         Dotenv dotenv = Dotenv.load();
         String url = dotenv.get("AMQP_URL");
 
+        // Connect to CloudAMQP server
         ConnectionFactory factory = new ConnectionFactory();
         factory.setUri(url);
 
         try (Connection connection = factory.newConnection();
-            Channel BOLSADEVALORES = connection.createChannel()) {
-            BOLSADEVALORES.queueDeclare(QUEUE_NAME, true, false, false, null);
-            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+             Channel channel = connection.createChannel()) {
+            channel.exchangeDeclare(EXCHANGE_NAME, "topic");
+            String queueName = channel.queueDeclare().getQueue();
+
+            if (argv.length < 1) {
+                System.err.println("Parâmetros não encontrados");
+                System.exit(1);
+            }
+
+            // Bind the queue to each stock topic
+            for (String bindingKey : argv) {
+                channel.queueBind(queueName, EXCHANGE_NAME, "stock." + bindingKey);
+            }
 
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String message = new String(delivery.getBody(), "UTF-8");
-                System.out.println(" [x] Received '" + message + "'");
+                String routingKey = delivery.getEnvelope().getRoutingKey();
+
+                try {
+                    System.out.println(" [x] Received '" + message + "' on topic '" + routingKey + "'");
+                    doWork(message);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    System.out.println(" [x] Done");
+                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+                }
             };
-            BOLSADEVALORES.basicConsume(QUEUE_NAME, true, deliverCallback, consumerTag -> {
-            });
+
+            boolean autoAck = false;
+            channel.basicConsume(queueName, autoAck, deliverCallback, consumerTag -> {});
+
+            // Aguarda chegada de mensagens
+            System.out.println(" [*] Waiting for messages related to stocks: " + Arrays.toString(argv));
+            while (true) {
+                Thread.sleep(1000);
+            }
+        }
+    }
+
+    /**
+     * Simula tempo de execução de uma tarefa
+     */
+    private static void doWork(String task) throws InterruptedException {
+        for (char ch : task.toCharArray()) {
+            if (ch == '.') Thread.sleep(3000);
         }
     }
 }

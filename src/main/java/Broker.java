@@ -4,7 +4,7 @@ import com.rabbitmq.client.ConnectionFactory;
 import io.github.cdimascio.dotenv.Dotenv;
 
 public class Broker {
-    private final static String QUEUE_NAME = "BROKER";
+    private final static String EXCHANGE_NAME = "trading_exchange";
 
     public static void main(String[] argv) throws Exception {
         Dotenv dotenv = Dotenv.load();
@@ -14,12 +14,15 @@ public class Broker {
         factory.setUri(url);
 
         try (Connection connection = factory.newConnection();
-            Channel BOLSADEVALORES = connection.createChannel()) {
-            BOLSADEVALORES.queueDeclare(QUEUE_NAME, true, false, false, null);
+             Channel channel = connection.createChannel()) {
 
-            String message = "Hello, RabbitMQ!";
+            channel.exchangeDeclare(EXCHANGE_NAME, "topic");
 
-            BOLSADEVALORES.basicPublish("", QUEUE_NAME, null, message.getBytes());
+            String message = "Ordem de compra: 100 ações";
+
+            // Use routing key like "stock.ABEV3.PETR4"
+            channel.basicPublish(EXCHANGE_NAME, "stock.ABEV3", null, message.getBytes());
+            channel.basicPublish(EXCHANGE_NAME, "stock.PETR4", null, message.getBytes());
             System.out.println(" [x] Sent '" + message + "'");
         }
     }
