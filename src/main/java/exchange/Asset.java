@@ -1,4 +1,4 @@
-package Shared;
+package exchange;
 
 public class Asset {
     private String id;

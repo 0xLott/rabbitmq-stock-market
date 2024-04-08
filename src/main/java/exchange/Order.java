@@ -1,4 +1,4 @@
-package Shared;
+package exchange;
 
 public abstract class Order {
     Asset asset;

@@ -1,4 +1,4 @@
-package Producer;
+package brokerage;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;

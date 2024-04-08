@@ -1,4 +1,4 @@
-package Shared;
+package exchange;
 
 import java.util.ArrayList;
 import java.util.List;

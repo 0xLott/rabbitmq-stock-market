@@ -1,4 +1,4 @@
-package Shared;
+package exchange;
 
 public class BuyOrder extends Order {
     public BuyOrder() {
