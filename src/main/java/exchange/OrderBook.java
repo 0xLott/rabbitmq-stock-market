@@ -12,11 +12,21 @@ public class OrderBook {
 
     public void addOrder(Order order) {
         orders.add(order);
+        System.out.println("Ordem adicionada com sucesso ao Livro de Ofertas!");
     }
 
     public void removeOrder(Order order) {
         orders.remove(order);
+        System.out.println("Ordem removida com sucesso ao Livro de Ofertas!");
     }
 
-    // TODO public List<Order> searchOrder(String criteria)
+    public List<Order> searchOrder(String asset, int amount, double value) {
+        List<Order> foundOrders = new ArrayList<>();
+        for (Order order : orders) {
+            if (order.getAsset().equals(asset) && order.getAmount() == amount && order.getValue() == value) {
+                foundOrders.add(order);
+            }
+        }
+        return foundOrders;
+    }
 }

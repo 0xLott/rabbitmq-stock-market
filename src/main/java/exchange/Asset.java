@@ -6,7 +6,7 @@ public class Asset {
 
     public Asset(String id, int amount) {
         this.id = id;
-        this.amount = amount;
+        amount = 0;
     }
 
     public void addStocks(int addAmount) {

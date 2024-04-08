@@ -2,10 +2,17 @@ package model;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
+import exchange.BuyOrder;
+import exchange.Order;
+import exchange.OrderBook;
+import exchange.SellOrder;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 
 public class MessageHandler {
+    static OrderBook orderbook = new OrderBook(new ArrayList<>());
+
     public static DeliverCallback createDeliverCallback(Channel channel) {
 
         // Parameters `consumerTag` and `delivery` are defined by the DeliverCallback functional interface
@@ -28,21 +35,29 @@ public class MessageHandler {
     private static void handle(String task) throws InterruptedException {
         String[] parts = splitTask(task);
         String operation = parts[0];
-        String stockId = parts[1];
+        String asset = parts[1];
+
         String[] parameters = parts[2].split(";");
+        String amount = parameters[0];
+        String value = parameters[1];
+        String broker = parameters[2];
 
-        if (operation != null && stockId != null && parameters.length == 3) {
-            String amount = parameters[0];
-            String value = parameters[1];
-            String broker = parameters[2];
+        value = value.replace(",", ".");
 
-            System.out.println("\tOperação: " + operation);
-            System.out.println("\tAtivo: " + stockId);
-            System.out.println("\tQuantidade: " + amount);
-            System.out.println("\tValor: " + value);
-            System.out.println("\tBroker: " + broker);
-        } else {
-            System.out.println("\tErro: formato inválido de mensagem!");
+        if (operation == null || asset == null || parameters.length != 3)
+            System.out.println("\t Erro: formato inválido de mensagem!");
+
+        switch (operation) {
+            case "compra":
+                Order buyOrder = new BuyOrder(asset, broker, Integer.parseInt(amount), Double.parseDouble(value));
+                orderbook.addOrder(buyOrder);
+                System.out.println(buyOrder.toString());
+                break;
+            case "venda":
+                Order sellOrder = new SellOrder(asset, broker, Integer.parseInt(amount), Double.parseDouble(value));
+                orderbook.addOrder(sellOrder);
+                System.out.println(sellOrder.toString());
+                break;
         }
     }
 
@@ -50,16 +65,16 @@ public class MessageHandler {
         String[] parts = new String[3];
 
         String[] firstSplit = task.split("\\.", 2);
-        if (firstSplit.length == 2) {
-            parts[0] = firstSplit[0];
-            String remaining = firstSplit[1];
+        if (firstSplit.length != 2) return parts;
 
-            String[] remainingParts = remaining.split("<", 2);
-            if (remainingParts.length == 2) {
-                parts[1] = remainingParts[0];
-                parts[2] = remainingParts[1].substring(0, remainingParts[1].length() - 1); // Remove '>' from parameters
-            }
-        }
+        parts[0] = firstSplit[0];
+        String remaining = firstSplit[1];
+
+        String[] remainingParts = remaining.split("<", 2);
+        if (remainingParts.length != 2) return parts;
+
+        parts[1] = remainingParts[0];
+        parts[2] = remainingParts[1].substring(0, remainingParts[1].length() - 1); // Remove '>' from parameters
 
         return parts;
     }

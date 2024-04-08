@@ -1,11 +1,7 @@
 package exchange;
 
 public class BuyOrder extends Order {
-    public BuyOrder() {
-        super();
-    }
-
-    public void addStocks(int addAmount) {
-        this.asset.addStocks(addAmount);
+    public BuyOrder(String asset, String broker, int amount, double value) {
+        super(asset, broker, amount, value);
     }
 }
