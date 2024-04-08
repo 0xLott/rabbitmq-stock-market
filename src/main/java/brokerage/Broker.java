@@ -20,7 +20,7 @@ public class Broker {
 
             channel.exchangeDeclare(EXCHANGE_NAME, "topic");
 
-            String message = "Ordem de compra: 100 ações";
+            String message = "compra.ABEV3<100;10,10;BKR1>";
 
             channel.basicPublish(EXCHANGE_NAME, "compra.ABEV3", null, message.getBytes());
             channel.basicPublish(EXCHANGE_NAME, "venda.PETR4", null, message.getBytes());

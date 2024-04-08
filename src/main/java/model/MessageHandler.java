@@ -8,13 +8,14 @@ import java.nio.charset.StandardCharsets;
 public class MessageHandler {
     public static DeliverCallback createDeliverCallback(Channel channel) {
 
+        // Parameters `consumerTag` and `delivery` are defined by the DeliverCallback functional interface
         return (consumerTag, delivery) -> {
             String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
             String routingKey = delivery.getEnvelope().getRoutingKey();
 
             try {
                 System.out.println(" [x] Received '" + message + "' on topic '" + routingKey + "'");
-                doWork(message);
+                handle(message);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             } finally {
@@ -24,10 +25,42 @@ public class MessageHandler {
         };
     }
 
-    /* Simula tempo de execução de uma tarefa */
-    private static void doWork(String task) throws InterruptedException {
-        for (char ch : task.toCharArray()) {
-            if (ch == '.') Thread.sleep(3000);
+    private static void handle(String task) throws InterruptedException {
+        String[] parts = splitTask(task);
+        String operation = parts[0];
+        String stockId = parts[1];
+        String[] parameters = parts[2].split(";");
+
+        if (operation != null && stockId != null && parameters.length == 3) {
+            String amount = parameters[0];
+            String value = parameters[1];
+            String broker = parameters[2];
+
+            System.out.println("\tOperação: " + operation);
+            System.out.println("\tAtivo: " + stockId);
+            System.out.println("\tQuantidade: " + amount);
+            System.out.println("\tValor: " + value);
+            System.out.println("\tBroker: " + broker);
+        } else {
+            System.out.println("\tErro: formato inválido de mensagem!");
         }
+    }
+
+    private static String[] splitTask(String task) {
+        String[] parts = new String[3];
+
+        String[] firstSplit = task.split("\\.", 2);
+        if (firstSplit.length == 2) {
+            parts[0] = firstSplit[0];
+            String remaining = firstSplit[1];
+
+            String[] remainingParts = remaining.split("<", 2);
+            if (remainingParts.length == 2) {
+                parts[1] = remainingParts[0];
+                parts[2] = remainingParts[1].substring(0, remainingParts[1].length() - 1); // Remove '>' from parameters
+            }
+        }
+
+        return parts;
     }
 }

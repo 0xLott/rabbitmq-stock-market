@@ -17,7 +17,7 @@ public class StockMarket {
         String url = dotenv.get("AMQP_URL");
 
         try (Connection connection = RabbitMQConnection.createConnection(url);
-             Channel channel = RabbitMQConnection.createChannel(connection)) {
+            Channel channel = RabbitMQConnection.createChannel(connection)) {
             RabbitMQConnection.declareExchange(channel);
             String queueName = channel.queueDeclare().getQueue();
 
@@ -32,8 +32,10 @@ public class StockMarket {
                 channel.queueBind(queueName, EXCHANGE_NAME, "venda." + bindingKey);
             }
 
+            // Handle message
             DeliverCallback deliverCallback = MessageHandler.createDeliverCallback(channel);
 
+            // Acknoledge message and remove from queue
             boolean autoAck = false;
             channel.basicConsume(queueName, autoAck, deliverCallback, consumerTag -> {});
 
