@@ -76,6 +76,7 @@ public class MessageHandler {
             Order sellOrder = new SellOrder(asset, broker, Integer.parseInt(amount), Double.parseDouble(value));
             orderbook.addOrder(sellOrder);
             System.out.println(sellOrder.toString());
+            System.out.println(sellOrder);
         });
     }
 
@@ -93,7 +94,7 @@ public class MessageHandler {
         if (remainingParts.length != 2) return parts;
 
         parts[1] = remainingParts[0];
-        parts[2] = remainingParts[1].substring(0, remainingParts[1].length() - 1); // Remove '>' from parameters
+        parts[2] = remainingParts[1].substring(0, remainingParts[1].length() - 1); // Remove '>' from `parameters`
 
         return parts;
     }

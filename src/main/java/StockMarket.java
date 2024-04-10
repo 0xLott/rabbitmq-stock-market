@@ -20,7 +20,7 @@ public class StockMarket {
             String queueName = channel.queueDeclare().getQueue();
 
             if (argv.length < 1) {
-                System.err.println("Parâmetros não encontrados");
+                System.err.println("Parâmetros não encontrados! Adicione-os nos argumentos de execução");
                 System.exit(1);
             }
 
