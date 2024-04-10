@@ -12,7 +12,7 @@ public class OrderBook {
 
     public void addOrder(Order order) {
         orders.add(order);
-        System.out.println("Ordem adicionada com sucesso ao Livro de Ofertas!");
+        System.out.println("\nA seguinte ordem foi adicionada com sucesso ao Livro de Ofertas:\n" + order);
     }
 
     public void removeOrder(Order order) {
