@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class TransactionBook {
-    private List<Transaction> transactions;
+    private final List<Transaction> transactions;
 
     public TransactionBook(List<Transaction> orders) {
         this.transactions = new ArrayList<>(orders);
@@ -12,6 +12,10 @@ public class TransactionBook {
 
     public void register(Transaction transaction) {
         transactions.add(transaction);
-        System.out.println("Transação registrada!");
+        System.out.println("\n Transação registrada!");
+    }
+
+    public void print() {
+        transactions.forEach(System.out::println);
     }
 }

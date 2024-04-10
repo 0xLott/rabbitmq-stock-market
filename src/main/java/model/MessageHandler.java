@@ -2,21 +2,18 @@ package model;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
-import exchange.BuyOrder;
-import exchange.Order;
-import exchange.OrderBook;
-import exchange.SellOrder;
+import exchange.*;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MessageHandler {
-    static OrderBook orderbook = new OrderBook(new ArrayList<>());
-    private static final Object orderbookLock = new Object();
+    private static final TransactionBook transactionBook = new TransactionBook(new ArrayList<>());
+    private static final OrderBook orderBook = new OrderBook(new ArrayList<>());
+    private static final Object orderBookLock = new Object();
 
     public static DeliverCallback createDeliverCallback(Channel channel) {
-
         // Parameters `consumerTag` and `delivery` are defined by the DeliverCallback functional interface
         return (consumerTag, delivery) -> {
             String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
@@ -60,31 +57,31 @@ public class MessageHandler {
     }
 
     private static void processBuyOrder(String asset, String broker, String amount, String value) {
-        synchronized (orderbookLock) {
+        synchronized (orderBookLock) {
             Order buyOrder = new BuyOrder(asset, broker, Integer.parseInt(amount), Double.parseDouble(value));
-            List<Order> matchingOrders = orderbook.searchOrder(asset, Integer.parseInt(amount), Double.parseDouble(value));
+            List<Order> matchingOrders = orderBook.searchOrder(asset, Integer.parseInt(amount), Double.parseDouble(value));
 
             if (matchingOrders.isEmpty()) {
-                orderbook.addOrder(buyOrder);
+                orderBook.addOrder(buyOrder);
             } else {
-                // TODO Implement transaction process
-                System.out.println("Transação realizada: " + buyOrder + " \n " + matchingOrders.get(0));
-                orderbook.removeOrder(matchingOrders.get(0));
+                Transaction transaction = new Transaction(buyOrder.getBroker(), matchingOrders.get(0).getBroker(), buyOrder);
+                transactionBook.register(transaction);
+                orderBook.removeOrder(matchingOrders.get(0));
             }
         }
     }
 
     private static void processSellOrder(String asset, String broker, String amount, String value) {
-        synchronized (orderbookLock) {
+        synchronized (orderBookLock) {
             Order sellOrder = new SellOrder(asset, broker, Integer.parseInt(amount), Double.parseDouble(value));
-            List<Order> matchingOrders = orderbook.searchOrder(asset, Integer.parseInt(amount), Double.parseDouble(value));
+            List<Order> matchingOrders = orderBook.searchOrder(asset, Integer.parseInt(amount), Double.parseDouble(value));
 
             if (matchingOrders.isEmpty()) {
-                orderbook.addOrder(sellOrder);
+                orderBook.addOrder(sellOrder);
             } else {
-                // TODO Implement transaction process
-                System.out.println("Transação realizada: " + sellOrder + " \n " + matchingOrders.get(0));
-                orderbook.removeOrder(matchingOrders.get(0));
+                Transaction transaction = new Transaction(matchingOrders.get(0).getBroker(), sellOrder.getBroker(), sellOrder);
+                transactionBook.register(transaction);
+                orderBook.removeOrder(matchingOrders.get(0));
             }
         }
     }
