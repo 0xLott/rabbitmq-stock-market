@@ -3,9 +3,7 @@ package market;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
 import exchange.*;
-import model.Notification;
-import model.Order;
-import model.Transaction;
+import model.*;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -69,7 +67,7 @@ public class OrderMessageHandler {
             if (matchingOrders.isEmpty()) {
                 orderBook.addOrder(buyOrder);
                 notifyBrokers(new Notification("compra", asset, amount, value, broker), channel);
-            } else if (matchingOrders.get(0).getOperation().equals("venda")){
+            } else if (matchingOrders.get(0).getOperation().equals("venda")) {
                 Transaction transaction = new Transaction(buyOrder.getBroker(), matchingOrders.get(0).getBroker(), buyOrder);
                 transactionBook.register(transaction);
                 orderBook.removeOrder(matchingOrders.get(0));

@@ -4,7 +4,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.DeliverCallback;
 import io.github.cdimascio.dotenv.Dotenv;
-import model.RabbitMQConnection;
+import connection.RabbitMQConnection;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,7 +25,7 @@ public class Broker {
 
         /* PRODUCER THREAD
          * Sends buy and sell orders to the exchange so that the stock market.market can receive them through the
-         * "BOLSADEVALORES" queue. Messages follow the format `operation.asset<amount;value;brokerId>`.
+         * "BROKER" queue. Messages follow the format `operation.asset<amount;value;brokerId>`.
          */
         executorService.submit(() -> {
             try {
@@ -41,7 +41,7 @@ public class Broker {
         });
 
         /* CONSUMER THREAD
-         * Through the "BROKER" queue, recieves notifications from the stock market.market whenever there is a new buy or
+         * Through the "BOLSADEVALORES" queue, recieves notifications from the stock market.market whenever there is a new buy or
          * sell order in one of the topics that the broker subscribes to.
          * TODO Implement subscrition system
          */

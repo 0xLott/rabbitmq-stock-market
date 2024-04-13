@@ -4,7 +4,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.DeliverCallback;
 import io.github.cdimascio.dotenv.Dotenv;
-import model.RabbitMQConnection;
+import connection.RabbitMQConnection;
 
 import java.util.Arrays;
 
