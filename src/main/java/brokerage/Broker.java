@@ -2,17 +2,13 @@ package brokerage;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
 import io.github.cdimascio.dotenv.Dotenv;
 import model.RabbitMQConnection;
 
-import java.io.IOException;
-import java.net.CacheRequest;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.TimeUnit;
 
 public class Broker {
     private final static String EXCHANGE_NAME = "trading_exchange";
@@ -24,13 +20,16 @@ public class Broker {
 
         ExecutorService executorService = Executors.newFixedThreadPool(2);
 
+        Connection connection = RabbitMQConnection.createConnection(url);
+        Channel channel = RabbitMQConnection.createChannel(connection);
+
+
         /* PRODUCER THREAD
          * Sends buy and sell orders to the exchange so that the stock market can receive them through the
          * "BOLSADEVALORES" queue. Messages follow the format `operation.asset<amount;value;brokerId>`.
          */
         executorService.submit(() -> {
-            try (Connection connection = RabbitMQConnection.createConnection(url);
-                 Channel channel = RabbitMQConnection.createChannel(connection)) {
+            try  {
 
                 String message1 = "compra.ABEV3<100;10,10;BKR1>";
                 String message2 = "venda.PETR4<140;04,10;BKR1>";
@@ -48,8 +47,7 @@ public class Broker {
          * TODO Implement subscrition system
          */
         executorService.submit(() -> {
-            try (Connection connection = RabbitMQConnection.createConnection(url);
-                 Channel channel = RabbitMQConnection.createChannel(connection)) {
+            try {
 
                 // Declare BROKER queue and bind to broker's identifier
                 String brokerQueue = channel.queueDeclare(QUEUE_NAME, true, false, false, null).getQueue();
@@ -67,5 +65,6 @@ public class Broker {
         });
 
         executorService.shutdown();
+        executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
     }
 }

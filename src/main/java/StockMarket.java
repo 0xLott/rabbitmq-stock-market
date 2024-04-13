@@ -40,11 +40,11 @@ public class StockMarket {
 
             // NOTIFICATION TEST SEND
             // TODO Delete this
-//            for (int i = 0; i < 10; i++) {
-//                String notification = "STOCK MARKET IS NOTIFYING BRK1";
-//                channel.basicPublish(EXCHANGE_NAME, "BRK1.teste", null, notification.getBytes());
-//                System.out.println("Notification send!");
-//            }
+            for (int i = 0; i < 10; i++) {
+                String notification = "compra.VALE5<50;10,10;BKR1>";
+                channel.basicPublish(EXCHANGE_NAME, "BRK1.teste", null, notification.getBytes());
+                System.out.println("Notification send!");
+            }
 
             // Wait for new messages to arrive
             System.out.println(" [*] Waiting for messages related to stocks: " + Arrays.toString(argv));

@@ -14,6 +14,7 @@ public class OrderMessageHandler {
     private static final Object orderBookLock = new Object();
 
     public static DeliverCallback createDeliverCallback(Channel channel) {
+
         // Parameters `consumerTag` and `delivery` are defined by the DeliverCallback functional interface
         return (consumerTag, delivery) -> {
             String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
