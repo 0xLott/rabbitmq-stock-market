@@ -2,7 +2,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.DeliverCallback;
 import io.github.cdimascio.dotenv.Dotenv;
-import model.MessageHandler;
+import model.OrderMessageHandler;
 import model.RabbitMQConnection;
 
 import java.util.Arrays;
@@ -15,7 +15,8 @@ public class StockMarket {
         String url = dotenv.get("AMQP_URL");
 
         try (Connection connection = RabbitMQConnection.createConnection(url);
-            Channel channel = RabbitMQConnection.createChannel(connection)) {
+             Channel channel = RabbitMQConnection.createChannel(connection)) {
+
             RabbitMQConnection.declareExchange(channel);
             String queueName = channel.queueDeclare().getQueue();
 
@@ -31,7 +32,7 @@ public class StockMarket {
             }
 
             // Handle message
-            DeliverCallback deliverCallback = MessageHandler.createDeliverCallback(channel);
+            DeliverCallback deliverCallback = OrderMessageHandler.createDeliverCallback(channel);
 
             // Acknoledge message and remove from queue
             boolean autoAck = false;

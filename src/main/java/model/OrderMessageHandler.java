@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MessageHandler {
+public class OrderMessageHandler {
     private static final TransactionBook transactionBook = new TransactionBook(new ArrayList<>());
     private static final OrderBook orderBook = new OrderBook(new ArrayList<>());
     private static final Object orderBookLock = new Object();
