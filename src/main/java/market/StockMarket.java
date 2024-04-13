@@ -19,7 +19,7 @@ public class StockMarket {
              Channel channel = RabbitMQConnection.createChannel(connection)) {
 
             RabbitMQConnection.declareExchange(channel);
-            String stockMarketQueue = channel.queueDeclare().getQueue();
+            String stockMarketQueue = channel.queueDeclare("BOLSADEVALORES", true, false, false, null).getQueue();
 
             if (argv.length < 1) {
                 System.err.println("Parâmetros não encontrados! Adicione-os nos argumentos de execução");
@@ -28,12 +28,10 @@ public class StockMarket {
 
             // Bind the queue to each stock topic
             for (String bindingKey : argv) {
-                channel.queueBind(stockMarketQueue, EXCHANGE_NAME, "compra." + bindingKey);
-                channel.queueBind(stockMarketQueue, EXCHANGE_NAME, "venda." + bindingKey);
+                channel.queueBind(stockMarketQueue, EXCHANGE_NAME, bindingKey);
             }
 
             // Handle message
-            OrderMessageHandler.setChannel(channel);
             DeliverCallback deliverCallback = OrderMessageHandler.createDeliverCallback(channel);
 
             // Acknoledge message and remove from queue

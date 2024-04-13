@@ -17,12 +17,6 @@ public class OrderMessageHandler {
     private static final OrderBook orderBook = new OrderBook(new ArrayList<>());
     private static final Object orderBookLock = new Object();
 
-    private static Channel channel;
-
-    public static void setChannel(Channel channel) {
-        OrderMessageHandler.channel = channel;
-    }
-
     public static DeliverCallback createDeliverCallback(Channel channel) {
 
         // Parameters `consumerTag` and `delivery` are defined by the DeliverCallback functional interface
@@ -32,7 +26,7 @@ public class OrderMessageHandler {
 
             try {
                 System.out.println(" [x] Received '" + message + "' on topic '" + routingKey + "'");
-                handle(message);
+                handle(message, channel);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             } finally {
@@ -42,7 +36,7 @@ public class OrderMessageHandler {
         };
     }
 
-    private static void handle(String task) throws InterruptedException, IOException {
+    private static void handle(String task, Channel channel) throws InterruptedException, IOException {
         String[] parts = splitTask(task);
         String operation = parts[0];
         String asset = parts[1];
@@ -59,22 +53,22 @@ public class OrderMessageHandler {
 
         switch (operation) {
             case "compra":
-                processBuyOrder(asset, broker, amount, value);
+                processBuyOrder(asset, broker, amount, value, channel);
                 break;
             case "venda":
-                processSellOrder(asset, broker, amount, value);
+                processSellOrder(asset, broker, amount, value, channel);
                 break;
         }
     }
 
-    private static void processBuyOrder(String asset, String broker, String amount, String value) throws IOException {
+    private static void processBuyOrder(String asset, String broker, String amount, String value, Channel channel) throws IOException {
         synchronized (orderBookLock) {
             Order buyOrder = new BuyOrder(asset, broker, Integer.parseInt(amount), Double.parseDouble(value));
             List<Order> matchingOrders = orderBook.searchOrder(asset, Integer.parseInt(amount), Double.parseDouble(value));
 
             if (matchingOrders.isEmpty()) {
                 orderBook.addOrder(buyOrder);
-                notifyBrokers(new Notification("compra", asset, amount, value, broker));
+                notifyBrokers(new Notification("compra", asset, amount, value, broker), channel);
             } else {
                 Transaction transaction = new Transaction(buyOrder.getBroker(), matchingOrders.get(0).getBroker(), buyOrder);
                 transactionBook.register(transaction);
@@ -83,14 +77,14 @@ public class OrderMessageHandler {
         }
     }
 
-    private static void processSellOrder(String asset, String broker, String amount, String value) throws IOException {
+    private static void processSellOrder(String asset, String broker, String amount, String value, Channel channel) throws IOException {
         synchronized (orderBookLock) {
             Order sellOrder = new SellOrder(asset, broker, Integer.parseInt(amount), Double.parseDouble(value));
             List<Order> matchingOrders = orderBook.searchOrder(asset, Integer.parseInt(amount), Double.parseDouble(value));
 
             if (matchingOrders.isEmpty()) {
                 orderBook.addOrder(sellOrder);
-                notifyBrokers(new Notification("venda", asset, amount, value, broker));
+                notifyBrokers(new Notification("venda", asset, amount, value, broker), channel);
             } else {
                 Transaction transaction = new Transaction(matchingOrders.get(0).getBroker(), sellOrder.getBroker(), sellOrder);
                 transactionBook.register(transaction);
@@ -99,9 +93,9 @@ public class OrderMessageHandler {
         }
     }
 
-    private static void notifyBrokers(Notification notification) throws IOException {
+    private static void notifyBrokers(Notification notification, Channel channel) throws IOException {
         String message = notification.buildMessage();
-        channel.basicPublish("trading_exchange", notification.getBroker(), null, message.getBytes());
+        channel.basicPublish("trading_exchange", notification.getBroker() + ".teste", null, message.getBytes());
     }
 
     private static String[] splitTask(String task) {
