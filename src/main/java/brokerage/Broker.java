@@ -11,7 +11,7 @@ import java.util.concurrent.Executors;
 
 public class Broker {
     private final static String EXCHANGE_NAME = "trading_exchange";
-    private final static String QUEUE_NAME = "BROKER";
+    private final static String QUEUE_NAME = "BOLSADEVALORES";
 
     public static void main(String[] argv) throws Exception {
         Dotenv dotenv = Dotenv.load();
@@ -30,11 +30,11 @@ public class Broker {
         executorService.submit(() -> {
             try {
 
-                String message1 = "compra.ABEV3<100;10,10;BKR1>";
-                String message2 = "venda.PETR4<140;04,10;BKR1>";
+                String message1 = "venda.ABEV3<100;10,10;BKR1>";
+                String message2 = "compra.PETR4<140;04,10;BKR1>";
 
-                channel.basicPublish(EXCHANGE_NAME, "compra.ABEV3", null, message1.getBytes());
-                channel.basicPublish(EXCHANGE_NAME, "venda.PETR4", null, message2.getBytes());
+                channel.basicPublish(EXCHANGE_NAME, "ABEV3", null, message1.getBytes());
+                channel.basicPublish(EXCHANGE_NAME, "PETR4", null, message2.getBytes());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -48,15 +48,15 @@ public class Broker {
         executorService.submit(() -> {
             try {
 
-                // Declare BROKER queue and bind to broker's identifier
-                String brokerQueue = channel.queueDeclare(QUEUE_NAME, true, false, false, null).getQueue();
-                channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "BRK1.*");
+                // Declare BOLSADEVALORES queue and bind to broker's identifier
+                String stockMarketQueue = channel.queueDeclare(QUEUE_NAME, true, false, false, null).getQueue();
+                channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "BKR1.*");
 
                 // Handle message
                 DeliverCallback deliverCallback = NotificationMessageHandler.createDeliverCallback(channel);
 
                 // Acknoledge message and remove from queue
-                channel.basicConsume(brokerQueue, true, deliverCallback, consumerTag -> {
+                channel.basicConsume(stockMarketQueue, true, deliverCallback, consumerTag -> {
                 });
 
             } catch (Exception e) {

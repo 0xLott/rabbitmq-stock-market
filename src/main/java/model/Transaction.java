@@ -14,7 +14,7 @@ public class Transaction {
     @Override
     public String toString() {
         return  " Broker comprador: " + buyer +
-                "\n Broker vendedor: " + seller +
+                " \n Broker vendedor: " + seller +
                 " \n Ativo: " + order.getAsset() +
                 " \n Quantidade: " + order.getAmount() +
                 " \n Valor: " + order.getValue();

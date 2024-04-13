@@ -63,13 +63,13 @@ public class OrderMessageHandler {
 
     private static void processBuyOrder(String asset, String broker, String amount, String value, Channel channel) throws IOException {
         synchronized (orderBookLock) {
-            Order buyOrder = new BuyOrder(asset, broker, Integer.parseInt(amount), Double.parseDouble(value));
+            Order buyOrder = new BuyOrder("compra", asset, broker, Integer.parseInt(amount), Double.parseDouble(value));
             List<Order> matchingOrders = orderBook.searchOrder(asset, Integer.parseInt(amount), Double.parseDouble(value));
 
             if (matchingOrders.isEmpty()) {
                 orderBook.addOrder(buyOrder);
                 notifyBrokers(new Notification("compra", asset, amount, value, broker), channel);
-            } else {
+            } else if (matchingOrders.get(0).getOperation().equals("venda")){
                 Transaction transaction = new Transaction(buyOrder.getBroker(), matchingOrders.get(0).getBroker(), buyOrder);
                 transactionBook.register(transaction);
                 orderBook.removeOrder(matchingOrders.get(0));
@@ -79,13 +79,13 @@ public class OrderMessageHandler {
 
     private static void processSellOrder(String asset, String broker, String amount, String value, Channel channel) throws IOException {
         synchronized (orderBookLock) {
-            Order sellOrder = new SellOrder(asset, broker, Integer.parseInt(amount), Double.parseDouble(value));
+            Order sellOrder = new SellOrder("venda", asset, broker, Integer.parseInt(amount), Double.parseDouble(value));
             List<Order> matchingOrders = orderBook.searchOrder(asset, Integer.parseInt(amount), Double.parseDouble(value));
 
             if (matchingOrders.isEmpty()) {
                 orderBook.addOrder(sellOrder);
                 notifyBrokers(new Notification("venda", asset, amount, value, broker), channel);
-            } else {
+            } else if (matchingOrders.get(0).getOperation().equals("compra")) {
                 Transaction transaction = new Transaction(matchingOrders.get(0).getBroker(), sellOrder.getBroker(), sellOrder);
                 transactionBook.register(transaction);
                 orderBook.removeOrder(matchingOrders.get(0));
@@ -99,20 +99,20 @@ public class OrderMessageHandler {
     }
 
     private static String[] splitTask(String task) {
-        String[] parts = new String[3];
+        String[] splitted = new String[3];
 
-        String[] firstSplit = task.split("\\.", 2);
-        if (firstSplit.length != 2) return parts;
+        String[] firstHalf = task.split("\\.", 2);
+        if (firstHalf.length != 2) return splitted;
 
-        parts[0] = firstSplit[0];
-        String remaining = firstSplit[1];
+        splitted[0] = firstHalf[0];
+        String remaining = firstHalf[1];
 
         String[] remainingParts = remaining.split("<", 2);
-        if (remainingParts.length != 2) return parts;
+        if (remainingParts.length != 2) return splitted;
 
-        parts[1] = remainingParts[0];
-        parts[2] = remainingParts[1].substring(0, remainingParts[1].length() - 1); // Remove '>' from `parameters`
+        splitted[1] = remainingParts[0];
+        splitted[2] = remainingParts[1].substring(0, remainingParts[1].length() - 1); // Remove '>' from `parameters`
 
-        return parts;
+        return splitted;
     }
 }

@@ -1,16 +1,22 @@
 package model;
 
 public abstract class Order {
+    private String operation;
     private String asset;
     private String broker;
     private int amount;
     private double value;
 
-    public Order(String asset, String broker, int amount, double value) {
+    public Order(String operation, String asset, String broker, int amount, double value) {
+        this.operation = operation;
         this.asset = asset;
         this.broker = broker;
         this.amount = amount;
         this.value = value;
+    }
+
+    public String getOperation() {
+        return operation;
     }
 
     public String getAsset() {
