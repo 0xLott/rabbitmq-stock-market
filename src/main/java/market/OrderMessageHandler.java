@@ -1,9 +1,13 @@
-package model;
+package market;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
 import exchange.*;
+import model.Notification;
+import model.Order;
+import model.Transaction;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +16,12 @@ public class OrderMessageHandler {
     private static final TransactionBook transactionBook = new TransactionBook(new ArrayList<>());
     private static final OrderBook orderBook = new OrderBook(new ArrayList<>());
     private static final Object orderBookLock = new Object();
+
+    private static Channel channel;
+
+    public static void setChannel(Channel channel) {
+        OrderMessageHandler.channel = channel;
+    }
 
     public static DeliverCallback createDeliverCallback(Channel channel) {
 
@@ -32,7 +42,7 @@ public class OrderMessageHandler {
         };
     }
 
-    private static void handle(String task) throws InterruptedException {
+    private static void handle(String task) throws InterruptedException, IOException {
         String[] parts = splitTask(task);
         String operation = parts[0];
         String asset = parts[1];
@@ -57,13 +67,14 @@ public class OrderMessageHandler {
         }
     }
 
-    private static void processBuyOrder(String asset, String broker, String amount, String value) {
+    private static void processBuyOrder(String asset, String broker, String amount, String value) throws IOException {
         synchronized (orderBookLock) {
             Order buyOrder = new BuyOrder(asset, broker, Integer.parseInt(amount), Double.parseDouble(value));
             List<Order> matchingOrders = orderBook.searchOrder(asset, Integer.parseInt(amount), Double.parseDouble(value));
 
             if (matchingOrders.isEmpty()) {
                 orderBook.addOrder(buyOrder);
+                notifyBrokers(new Notification("compra", asset, amount, value, broker));
             } else {
                 Transaction transaction = new Transaction(buyOrder.getBroker(), matchingOrders.get(0).getBroker(), buyOrder);
                 transactionBook.register(transaction);
@@ -72,19 +83,25 @@ public class OrderMessageHandler {
         }
     }
 
-    private static void processSellOrder(String asset, String broker, String amount, String value) {
+    private static void processSellOrder(String asset, String broker, String amount, String value) throws IOException {
         synchronized (orderBookLock) {
             Order sellOrder = new SellOrder(asset, broker, Integer.parseInt(amount), Double.parseDouble(value));
             List<Order> matchingOrders = orderBook.searchOrder(asset, Integer.parseInt(amount), Double.parseDouble(value));
 
             if (matchingOrders.isEmpty()) {
                 orderBook.addOrder(sellOrder);
+                notifyBrokers(new Notification("venda", asset, amount, value, broker));
             } else {
                 Transaction transaction = new Transaction(matchingOrders.get(0).getBroker(), sellOrder.getBroker(), sellOrder);
                 transactionBook.register(transaction);
                 orderBook.removeOrder(matchingOrders.get(0));
             }
         }
+    }
+
+    private static void notifyBrokers(Notification notification) throws IOException {
+        String message = notification.buildMessage();
+        channel.basicPublish("trading_exchange", notification.getBroker(), null, message.getBytes());
     }
 
     private static String[] splitTask(String task) {

@@ -1,8 +1,9 @@
+package market;
+
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.DeliverCallback;
 import io.github.cdimascio.dotenv.Dotenv;
-import model.OrderMessageHandler;
 import model.RabbitMQConnection;
 
 import java.util.Arrays;
@@ -32,15 +33,16 @@ public class StockMarket {
             }
 
             // Handle message
+            OrderMessageHandler.setChannel(channel);
             DeliverCallback deliverCallback = OrderMessageHandler.createDeliverCallback(channel);
 
             // Acknoledge message and remove from queue
             boolean autoAck = false;
-            channel.basicConsume(stockMarketQueue, autoAck, deliverCallback, consumerTag -> {});
+            channel.basicConsume(stockMarketQueue, autoAck, deliverCallback, consumerTag -> {
+            });
 
             // NOTIFICATION TEST SEND
-            // TODO Delete this
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 5; i++) {
                 String notification = "compra.VALE5<50;10,10;BKR1>";
                 channel.basicPublish(EXCHANGE_NAME, "BRK1.teste", null, notification.getBytes());
                 System.out.println("Notification send!");

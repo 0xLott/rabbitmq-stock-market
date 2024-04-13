@@ -8,7 +8,6 @@ import model.RabbitMQConnection;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class Broker {
     private final static String EXCHANGE_NAME = "trading_exchange";
@@ -25,11 +24,11 @@ public class Broker {
 
 
         /* PRODUCER THREAD
-         * Sends buy and sell orders to the exchange so that the stock market can receive them through the
+         * Sends buy and sell orders to the exchange so that the stock market.market can receive them through the
          * "BOLSADEVALORES" queue. Messages follow the format `operation.asset<amount;value;brokerId>`.
          */
         executorService.submit(() -> {
-            try  {
+            try {
 
                 String message1 = "compra.ABEV3<100;10,10;BKR1>";
                 String message2 = "venda.PETR4<140;04,10;BKR1>";
@@ -42,7 +41,7 @@ public class Broker {
         });
 
         /* CONSUMER THREAD
-         * Through the "BROKER" queue, recieves notifications from the stock market whenever there is a new buy or
+         * Through the "BROKER" queue, recieves notifications from the stock market.market whenever there is a new buy or
          * sell order in one of the topics that the broker subscribes to.
          * TODO Implement subscrition system
          */
@@ -57,14 +56,12 @@ public class Broker {
                 DeliverCallback deliverCallback = NotificationMessageHandler.createDeliverCallback(channel);
 
                 // Acknoledge message and remove from queue
-                channel.basicConsume(brokerQueue, true, deliverCallback, consumerTag -> {});
+                channel.basicConsume(brokerQueue, true, deliverCallback, consumerTag -> {
+                });
 
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
-
-        executorService.shutdown();
-        executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
     }
 }

@@ -1,5 +1,7 @@
 package exchange;
 
+import model.Transaction;
+
 import java.util.List;
 import java.util.ArrayList;
 

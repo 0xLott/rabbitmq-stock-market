@@ -1,4 +1,4 @@
-package exchange;
+package model;
 
 public abstract class Order {
     private String asset;

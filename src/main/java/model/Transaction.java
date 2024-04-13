@@ -1,4 +1,4 @@
-package exchange;
+package model;
 
 public class Transaction {
     private String buyer;

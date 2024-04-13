@@ -35,9 +35,9 @@ public class NotificationMessageHandler {
         String broker = parameters[2];
 
         System.out.println(
-                "Notificação recebida: Nova ordem de " + operation + "\n" +
-                amount + " ações " + asset + " no valor de " +
-                "R$" + value + " por broker " + broker + "\n"
+                " ⚠ Nova ordem de " + operation + ":\n" +
+                        " " + amount + " ações " + asset + " no valor de " +
+                        "R$" + value + " por broker " + broker + "\n"
         );
 
     }
