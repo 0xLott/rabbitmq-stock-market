@@ -2,11 +2,8 @@ package brokerage;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
-import exchange.OrderBook;
-import exchange.TransactionBook;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 
 public class NotificationMessageHandler {
     public static DeliverCallback createDeliverCallback(Channel channel) {
@@ -21,8 +18,7 @@ public class NotificationMessageHandler {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             } finally {
-                System.out.println(" [x] Done");
-                channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+                System.out.println(" [x] Done" + "\n");
             }
         };
     }

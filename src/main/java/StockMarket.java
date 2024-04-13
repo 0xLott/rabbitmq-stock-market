@@ -18,7 +18,7 @@ public class StockMarket {
              Channel channel = RabbitMQConnection.createChannel(connection)) {
 
             RabbitMQConnection.declareExchange(channel);
-            String queueName = channel.queueDeclare().getQueue();
+            String stockMarketQueue = channel.queueDeclare().getQueue();
 
             if (argv.length < 1) {
                 System.err.println("Parâmetros não encontrados! Adicione-os nos argumentos de execução");
@@ -27,8 +27,8 @@ public class StockMarket {
 
             // Bind the queue to each stock topic
             for (String bindingKey : argv) {
-                channel.queueBind(queueName, EXCHANGE_NAME, "compra." + bindingKey);
-                channel.queueBind(queueName, EXCHANGE_NAME, "venda." + bindingKey);
+                channel.queueBind(stockMarketQueue, EXCHANGE_NAME, "compra." + bindingKey);
+                channel.queueBind(stockMarketQueue, EXCHANGE_NAME, "venda." + bindingKey);
             }
 
             // Handle message
@@ -36,7 +36,15 @@ public class StockMarket {
 
             // Acknoledge message and remove from queue
             boolean autoAck = false;
-            channel.basicConsume(queueName, autoAck, deliverCallback, consumerTag -> {});
+            channel.basicConsume(stockMarketQueue, autoAck, deliverCallback, consumerTag -> {});
+
+            // NOTIFICATION TEST SEND
+            // TODO Delete this
+//            for (int i = 0; i < 10; i++) {
+//                String notification = "STOCK MARKET IS NOTIFYING BRK1";
+//                channel.basicPublish(EXCHANGE_NAME, "BRK1.teste", null, notification.getBytes());
+//                System.out.println("Notification send!");
+//            }
 
             // Wait for new messages to arrive
             System.out.println(" [*] Waiting for messages related to stocks: " + Arrays.toString(argv));
