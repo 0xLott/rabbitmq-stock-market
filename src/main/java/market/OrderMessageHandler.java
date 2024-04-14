@@ -93,7 +93,7 @@ public class OrderMessageHandler {
 
     private static void notifyBrokers(Notification notification, Channel channel) throws IOException {
         String message = notification.buildMessage();
-        channel.basicPublish("trading_exchange", notification.getBroker() + ".teste", null, message.getBytes());
+        channel.basicPublish("trading_exchange", notification.getBroker() + "." + notification.getAsset(), null, message.getBytes());
     }
 
     private static String[] splitTask(String task) {

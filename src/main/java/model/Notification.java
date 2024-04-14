@@ -22,4 +22,8 @@ public class Notification {
     public String getBroker() {
         return broker;
     }
+    public String getAsset() {
+        return asset;
+    }
+
 }
