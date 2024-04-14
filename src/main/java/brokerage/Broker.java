@@ -6,12 +6,15 @@ import com.rabbitmq.client.DeliverCallback;
 import io.github.cdimascio.dotenv.Dotenv;
 import connection.RabbitMQConnection;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Broker {
     private final static String EXCHANGE_NAME = "trading_exchange";
     private final static String QUEUE_NAME = "BOLSADEVALORES";
+    private final List<String> subscribedAssets = new ArrayList<>();
 
     public static void main(String[] argv) throws Exception {
         Dotenv dotenv = Dotenv.load();
@@ -22,7 +25,6 @@ public class Broker {
         Connection connection = RabbitMQConnection.createConnection(url);
         Channel channel = RabbitMQConnection.createChannel(connection);
 
-
         /* PRODUCER THREAD
          * Sends buy and sell orders to the exchange so that the stock market.market can receive them through the
          * "BROKER" queue. Messages follow the format `operation.asset<amount;value;brokerId>`.
@@ -30,11 +32,12 @@ public class Broker {
         executorService.submit(() -> {
             try {
 
-                String message1 = "venda.ABEV3<100;10,10;BKR1>";
-                String message2 = "compra.PETR4<140;04,10;BKR1>";
+                String message1 = "compra.ABEV3<100;10,10;BKR1>";
+                String message2 = "venda.PETR4<140;04,10;BKR1>";
 
                 channel.basicPublish(EXCHANGE_NAME, "ABEV3", null, message1.getBytes());
                 channel.basicPublish(EXCHANGE_NAME, "PETR4", null, message2.getBytes());
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -50,7 +53,16 @@ public class Broker {
 
                 // Declare BOLSADEVALORES queue and bind to broker's identifier
                 String stockMarketQueue = channel.queueDeclare(QUEUE_NAME, true, false, false, null).getQueue();
-                channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "BKR1.*");
+
+                // Subscribe to assets
+                Broker broker = new Broker();
+                broker.subscribe("PETR4");
+                broker.subscribe("ABEV3");
+
+                // Bind queue to subscribed assets
+                for (String asset : broker.getSubscribedAssets()) {
+                    channel.queueBind(stockMarketQueue, EXCHANGE_NAME, "BKR1." + asset);
+                }
 
                 // Handle message
                 DeliverCallback deliverCallback = NotificationMessageHandler.createDeliverCallback(channel);
@@ -63,5 +75,17 @@ public class Broker {
                 e.printStackTrace();
             }
         });
+    }
+
+    private void subscribe(String asset) {
+        subscribedAssets.add(asset);
+    }
+
+    private boolean isSubscribed(String asset) {
+        return subscribedAssets.contains(asset);
+    }
+
+    public List<String> getSubscribedAssets() {
+        return subscribedAssets;
     }
 }
